@@ -56,4 +56,23 @@ public class GraphParserTest {
         assertTrue(output.contains("e"));
         assertTrue(output.contains("f"));
     }
+
+    @Test
+    public void testAddEdge() throws IOException {
+        File tempFile = File.createTempFile("testGraph", ".dot");
+        tempFile.deleteOnExit();
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write("digraph G {\n");
+            writer.write("  A -> B;\n");
+            writer.write("}\n");
+        }
+        GraphParser parser = new GraphParser();
+        parser.parseGraph(tempFile.getAbsolutePath());
+        boolean addedEdge = parser.addEdge("B", "C");
+        assertTrue(addedEdge);
+        boolean duplicateEdge = parser.addEdge("A", "B");
+        assertFalse(duplicateEdge);
+        boolean newEdge = parser.addEdge("X", "Y");
+        assertTrue(newEdge);
+    }
 }

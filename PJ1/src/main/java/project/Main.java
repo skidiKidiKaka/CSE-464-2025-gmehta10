@@ -19,6 +19,27 @@ public class Main {
             System.out.println("Node 'X' already exists.");
         }
         parser.addNodes(new String[]{"Y", "Z", "a"});
+        System.out.println("\nGraph after adding nodes:");
+        System.out.println(parser.toString());
+        System.out.println("\nAdding edges...");
+        boolean addedEdge1 = parser.addEdge("X", "Y");
+        if (addedEdge1) {
+            System.out.println("Edge 'X -> Y' added.");
+        } else {
+            System.out.println("Edge 'X -> Y' already exists.");
+        }
+        boolean addedEdge2 = parser.addEdge("B", "C");
+        if (addedEdge2) {
+            System.out.println("Edge 'B -> C' added.");
+        } else {
+            System.out.println("Edge 'B -> C' already exists.");
+        }
+        boolean addedEdge3 = parser.addEdge("X", "Y");
+        if (addedEdge3) {
+            System.out.println("Edge 'X -> Y' added.");
+        } else {
+            System.out.println("Edge 'X -> Y' already exists.");
+        }
         System.out.println("\nUpdated Graph:");
         System.out.println(parser.toString());
     }

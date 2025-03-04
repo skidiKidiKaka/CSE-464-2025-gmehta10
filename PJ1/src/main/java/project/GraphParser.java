@@ -64,6 +64,18 @@ public class GraphParser {
         }
     }
 
+    public boolean addEdge(String srcLabel, String dstLabel) {
+        for (String[] edge : edges) {
+            if (edge[0].equals(srcLabel) && edge[1].equals(dstLabel)) {
+                return false;
+            }
+        }
+        nodes.add(srcLabel);
+        nodes.add(dstLabel);
+        edges.add(new String[] { srcLabel, dstLabel });
+        return true;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
