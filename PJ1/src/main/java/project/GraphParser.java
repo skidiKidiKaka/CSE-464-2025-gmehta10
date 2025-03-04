@@ -1,6 +1,7 @@
 package project;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -74,6 +75,48 @@ public class GraphParser {
         nodes.add(dstLabel);
         edges.add(new String[] { srcLabel, dstLabel });
         return true;
+    }
+
+    public String toDOTString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("digraph G {\n");
+        for (String[] edge : edges) {
+            sb.append("  ").append(edge[0]).append(" -> ").append(edge[1]).append(";\n");
+        }
+        Set<String> connectedNodes = new HashSet<>();
+        for (String[] edge : edges) {
+            connectedNodes.add(edge[0]);
+            connectedNodes.add(edge[1]);
+        }
+        for (String node : nodes) {
+            if (!connectedNodes.contains(node)) {
+                sb.append("  ").append(node).append(";\n");
+            }
+        }
+        sb.append("}\n");
+        return sb.toString();
+    }
+
+    public void outputDOTGraph(String filepath) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filepath))) {
+            writer.print(toDOTString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void outputGraphics(String filepath, String format) {
+        try {
+            File tempDot = File.createTempFile("graph", ".dot");
+            outputDOTGraph(tempDot.getAbsolutePath());
+            ProcessBuilder pb = new ProcessBuilder("dot", "-T" + format, tempDot.getAbsolutePath(), "-o", filepath);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            process.waitFor();
+            tempDot.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

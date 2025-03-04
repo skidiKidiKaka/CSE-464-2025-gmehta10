@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.HashSet;
 
 public class GraphParserTest {
 
@@ -74,5 +76,32 @@ public class GraphParserTest {
         assertFalse(duplicateEdge);
         boolean newEdge = parser.addEdge("X", "Y");
         assertTrue(newEdge);
+    }
+
+    @Test
+    public void testOutputDOTGraph() throws IOException {
+        GraphParser parser = new GraphParser();
+        parser.addNode("A");
+        parser.addNode("B");
+        parser.addEdge("A", "B");
+        parser.addNode("C");
+        File tempDotFile = File.createTempFile("outputTest", ".dot");
+        tempDotFile.deleteOnExit();
+        parser.outputDOTGraph(tempDotFile.getAbsolutePath());
+        String content = new String(Files.readAllBytes(tempDotFile.toPath()));
+        assertTrue(content.contains("digraph"));
+        assertTrue(content.contains("A -> B;"));
+        assertTrue(content.contains("C;"));
+    }
+
+    @Test
+    public void testOutputGraphics() throws IOException {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        File tempPng = File.createTempFile("graphOutput", ".png");
+        tempPng.deleteOnExit();
+        parser.outputGraphics(tempPng.getAbsolutePath(), "png");
+        assertTrue(tempPng.exists());
+        assertTrue(tempPng.length() > 0);
     }
 }

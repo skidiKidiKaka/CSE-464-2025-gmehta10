@@ -42,5 +42,9 @@ public class Main {
         }
         System.out.println("\nUpdated Graph:");
         System.out.println(parser.toString());
+        System.out.println("\nOutputting DOT file to output.dot");
+        parser.outputDOTGraph("output.dot");
+        System.out.println("Outputting graphics to graph.png");
+        parser.outputGraphics("graph.png", "png");
     }
 }
