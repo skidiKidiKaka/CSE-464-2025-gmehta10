@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashSet;
 
 public class GraphParserTest {
 
@@ -103,5 +102,73 @@ public class GraphParserTest {
         parser.outputGraphics(tempPng.getAbsolutePath(), "png");
         assertTrue(tempPng.exists());
         assertTrue(tempPng.length() > 0);
+    }
+
+
+    @Test
+    public void testRemoveNode() {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        parser.addEdge("B", "C");
+        parser.addNode("D");
+        // Remove node B; its incident edges (A->B and B->C) should be removed.
+        parser.removeNode("B");
+        String output = parser.toString();
+        assertFalse(output.contains("B"));
+        assertFalse(output.contains("A -> B"));
+        assertFalse(output.contains("B -> C"));
+        // Nodes A, C, and D should remain.
+        assertTrue(output.contains("A"));
+        assertTrue(output.contains("C"));
+        assertTrue(output.contains("D"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveNonExistentNode() {
+        GraphParser parser = new GraphParser();
+        parser.addNode("A");
+        // Removing a node that doesn't exist should throw an exception.
+        parser.removeNode("X");
+    }
+
+    @Test
+    public void testRemoveNodes() {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        parser.addEdge("B", "C");
+        parser.addEdge("C", "D");
+        parser.addNode("E");
+        // Remove nodes B and C.
+        parser.removeNodes(new String[]{"B", "C"});
+        String output = parser.toString();
+        assertFalse(output.contains("B"));
+        assertFalse(output.contains("C"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveNonExistentNodes() {
+        GraphParser parser = new GraphParser();
+        parser.addNode("A");
+        // Removing multiple nodes including one that doesn't exist.
+        parser.removeNodes(new String[]{"A", "Z"});
+    }
+
+    @Test
+    public void testRemoveEdge() {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        parser.addEdge("B", "C");
+        // Remove edge A->B.
+        parser.removeEdge("A", "B");
+        String output = parser.toString();
+        assertFalse(output.contains("A -> B"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveNonExistentEdge() {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        // Removing a non-existent edge should throw an exception.
+        parser.removeEdge("B", "A");
     }
 }

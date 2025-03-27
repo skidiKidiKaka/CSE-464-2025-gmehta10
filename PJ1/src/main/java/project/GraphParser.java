@@ -6,10 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class GraphParser {
     private Set<String> nodes;
@@ -119,6 +116,54 @@ public class GraphParser {
         }
     }
 
+    public void outputGraph(String filepath) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filepath))) {
+            writer.print(this.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    // Remove a node and all its incident edges.
+    public void removeNode(String label) {
+        if (!nodes.contains(label)) {
+            throw new IllegalArgumentException("Node does not exist: " + label);
+        }
+        nodes.remove(label);
+        // Remove any edges incident to this node.
+        edges.removeIf(edge -> edge[0].equals(label) || edge[1].equals(label));
+    }
+
+    // Remove multiple nodes. First, check that every node exists.
+    public void removeNodes(String[] labels) {
+        for (String label : labels) {
+            if (!nodes.contains(label)) {
+                throw new IllegalArgumentException("Node does not exist: " + label);
+            }
+        }
+        for (String label : labels) {
+            removeNode(label);
+        }
+    }
+
+    // Remove an edge.
+    public void removeEdge(String srcLabel, String dstLabel) {
+        boolean removed = false;
+        Iterator<String[]> iterator = edges.iterator();
+        while (iterator.hasNext()) {
+            String[] edge = iterator.next();
+            if (edge[0].equals(srcLabel) && edge[1].equals(dstLabel)) {
+                iterator.remove();
+                removed = true;
+                break;
+            }
+        }
+        if (!removed) {
+            throw new IllegalArgumentException("Edge does not exist: " + srcLabel + " -> " + dstLabel);
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -130,13 +175,5 @@ public class GraphParser {
             sb.append(edge[0]).append(" -> ").append(edge[1]).append("\n");
         }
         return sb.toString();
-    }
-
-    public void outputGraph(String filepath) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(filepath))) {
-            writer.print(this.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
