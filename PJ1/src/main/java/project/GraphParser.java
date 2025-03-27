@@ -17,7 +17,6 @@ public class GraphParser {
         edges = new ArrayList<>();
     }
 
-    // --- Parsing a DOT file ---
     public void parseGraph(String filepath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filepath))) {
             String line;
@@ -53,7 +52,6 @@ public class GraphParser {
         }
     }
 
-    // --- Adding nodes/edges ---
     public boolean addNode(String label) {
         return nodes.add(label);
     }
@@ -65,7 +63,6 @@ public class GraphParser {
     }
 
     public boolean addEdge(String srcLabel, String dstLabel) {
-        // Avoid duplicate edges
         for (String[] edge : edges) {
             if (edge[0].equals(srcLabel) && edge[1].equals(dstLabel)) {
                 return false;
@@ -77,14 +74,12 @@ public class GraphParser {
         return true;
     }
 
-    // --- Output methods ---
     public String toDOTString() {
         StringBuilder sb = new StringBuilder();
         sb.append("digraph G {\n");
         for (String[] edge : edges) {
             sb.append("  ").append(edge[0]).append(" -> ").append(edge[1]).append(";\n");
         }
-        // If there are any isolated nodes (with no edges), include them
         Set<String> connectedNodes = new HashSet<>();
         for (String[] edge : edges) {
             connectedNodes.add(edge[0]);
@@ -129,28 +124,29 @@ public class GraphParser {
         }
     }
 
-    // --- Removal APIs ---
+    // Remove a node and all its incident edges.
     public void removeNode(String label) {
         if (!nodes.contains(label)) {
             throw new IllegalArgumentException("Node does not exist: " + label);
         }
         nodes.remove(label);
+        // Remove any edges incident to this node.
         edges.removeIf(edge -> edge[0].equals(label) || edge[1].equals(label));
     }
 
+    // Remove multiple nodes. First, check that every node exists.
     public void removeNodes(String[] labels) {
-        // First verify all exist
         for (String label : labels) {
             if (!nodes.contains(label)) {
                 throw new IllegalArgumentException("Node does not exist: " + label);
             }
         }
-        // Then remove them
         for (String label : labels) {
             removeNode(label);
         }
     }
 
+    // Remove an edge.
     public void removeEdge(String srcLabel, String dstLabel) {
         boolean removed = false;
         Iterator<String[]> iterator = edges.iterator();
@@ -167,32 +163,18 @@ public class GraphParser {
         }
     }
 
-    // --- Unified GraphSearch API (with BFS or DFS) ---
-    public Path GraphSearch(Node src, Node dst, Algorithm algo) {
+    // New BFS graph search API (for the 'bfs' branch)
+    public Path GraphSearch(Node src, Node dst) {
         String start = src.getLabel();
         String target = dst.getLabel();
-        // Return null if either node doesn't exist
         if (!nodes.contains(start) || !nodes.contains(target)) {
             return null;
         }
-        switch (algo) {
-            case BFS:
-                return bfsSearch(start, target);
-            case DFS:
-                return dfsSearch(start, target);
-            default:
-                return null;
-        }
-    }
-
-    // BFS helper
-    private Path bfsSearch(String start, String target) {
         Map<String, String> prev = new HashMap<>();
         Set<String> visited = new HashSet<>();
         Queue<String> queue = new LinkedList<>();
         visited.add(start);
         queue.offer(start);
-
         while (!queue.isEmpty()) {
             String current = queue.poll();
             if (current.equals(target)) {
@@ -212,37 +194,7 @@ public class GraphParser {
         return null;
     }
 
-    // DFS helper
-    private Path dfsSearch(String start, String target) {
-        Set<String> visited = new HashSet<>();
-        Map<String, String> prev = new HashMap<>();
-        boolean found = dfs(start, target, visited, prev);
-        if (!found) {
-            return null;
-        }
-        return reconstructPath(start, target, prev);
-    }
-
-    private boolean dfs(String current, String target, Set<String> visited, Map<String, String> prev) {
-        visited.add(current);
-        if (current.equals(target)) {
-            return true;
-        }
-        for (String[] edge : edges) {
-            if (edge[0].equals(current)) {
-                String neighbor = edge[1];
-                if (!visited.contains(neighbor)) {
-                    prev.put(neighbor, current);
-                    if (dfs(neighbor, target, visited, prev)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    // Only ONE reconstructPath method
+    // Helper method to reconstruct a path from start to target.
     private Path reconstructPath(String start, String target, Map<String, String> prev) {
         List<String> path = new ArrayList<>();
         for (String at = target; at != null; at = prev.get(at)) {
@@ -266,5 +218,93 @@ public class GraphParser {
             sb.append(edge[0]).append(" -> ").append(edge[1]).append("\n");
         }
         return sb.toString();
+    }
+
+    // New unified GraphSearch API with an enum parameter.
+    // Depending on the value of 'algo' (BFS or DFS), it uses the corresponding search strategy.
+    public Path GraphSearch(Node src, Node dst, Algorithm algo) {
+        String start = src.getLabel();
+        String target = dst.getLabel();
+        if (!nodes.contains(start) || !nodes.contains(target)) {
+            return null;
+        }
+        switch(algo) {
+            case BFS:
+                return bfsSearch(start, target);
+            case DFS:
+                return dfsSearch(start, target);
+            default:
+                return null;
+        }
+    }
+
+    // Private helper method for BFS search.
+    private Path bfsSearch(String start, String target) {
+        Map<String, String> prev = new HashMap<>();
+        Set<String> visited = new HashSet<>();
+        Queue<String> queue = new LinkedList<>();
+        visited.add(start);
+        queue.offer(start);
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            if (current.equals(target)) {
+                return reconstructPath(start, target, prev);
+            }
+            for (String[] edge : edges) {
+                if (edge[0].equals(current)) {
+                    String neighbor = edge[1];
+                    if (!visited.contains(neighbor)) {
+                        visited.add(neighbor);
+                        prev.put(neighbor, current);
+                        queue.offer(neighbor);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // Private helper method for DFS search.
+    private Path dfsSearch(String start, String target) {
+        Set<String> visited = new HashSet<>();
+        Map<String, String> prev = new HashMap<>();
+        boolean found = dfs(start, target, visited, prev);
+        if (!found) {
+            return null;
+        }
+        return reconstructPath(start, target, prev);
+    }
+
+    // Recursive DFS helper.
+    private boolean dfs(String current, String target, Set<String> visited, Map<String, String> prev) {
+        visited.add(current);
+        if (current.equals(target)) {
+            return true;
+        }
+        for (String[] edge : edges) {
+            if (edge[0].equals(current)) {
+                String neighbor = edge[1];
+                if (!visited.contains(neighbor)) {
+                    prev.put(neighbor, current);
+                    if (dfs(neighbor, target, visited, prev)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    // Helper method to reconstruct the path from start to target using the predecessor map.
+    private Path reconstructPath(String start, String target, Map<String, String> prev) {
+        List<String> path = new ArrayList<>();
+        for (String at = target; at != null; at = prev.get(at)) {
+            path.add(at);
+        }
+        Collections.reverse(path);
+        if (!path.isEmpty() && path.get(0).equals(start)) {
+            return new Path(path);
+        }
+        return null;
     }
 }
