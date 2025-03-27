@@ -94,6 +94,7 @@ public class GraphParserTest {
         assertTrue(content.contains("C;"));
     }
 
+
     @Test
     public void testRemoveNode() {
         GraphParser parser = new GraphParser();
@@ -163,12 +164,12 @@ public class GraphParserTest {
 
 
     @Test
-    public void testGraphSearchDirectEdge() {
+    public void testUnifiedGraphSearchDirectEdgeBFS() {
         GraphParser parser = new GraphParser();
         parser.addEdge("A", "B");
-        // Test a direct edge search: A -> B.
-        Path path = parser.GraphSearch(new Node("A"), new Node("B"));
-        assertNotNull("Expected a valid path from A to B", path);
+        // Test a direct edge search using BFS.
+        Path path = parser.GraphSearch(new Node("A"), new Node("B"), Algorithm.BFS);
+        assertNotNull("Expected a valid path from A to B using BFS", path);
         List<String> nodesInPath = path.getNodes();
         assertEquals(2, nodesInPath.size());
         assertEquals("A", nodesInPath.get(0));
@@ -176,40 +177,91 @@ public class GraphParserTest {
     }
 
     @Test
-    public void testGraphSearchMultipleSteps() {
+    public void testUnifiedGraphSearchDirectEdgeDFS() {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        // Test a direct edge search using DFS.
+        Path path = parser.GraphSearch(new Node("A"), new Node("B"), Algorithm.DFS);
+        assertNotNull("Expected a valid path from A to B using DFS", path);
+        List<String> nodesInPath = path.getNodes();
+        assertEquals(2, nodesInPath.size());
+        assertEquals("A", nodesInPath.get(0));
+        assertEquals("B", nodesInPath.get(1));
+    }
+
+    @Test
+    public void testUnifiedGraphSearchMultipleStepsBFS() {
         GraphParser parser = new GraphParser();
         // Build a graph: A -> B, B -> C, A -> D, D -> C.
         parser.addEdge("A", "B");
         parser.addEdge("B", "C");
         parser.addEdge("A", "D");
         parser.addEdge("D", "C");
-        // Expect the shortest path A -> B -> C.
-        Path path = parser.GraphSearch(new Node("A"), new Node("C"));
-        assertNotNull("Expected a valid path from A to C", path);
+        // Expect the shortest path A -> B -> C when using BFS.
+        Path path = parser.GraphSearch(new Node("A"), new Node("C"), Algorithm.BFS);
+        assertNotNull("Expected a valid path from A to C using BFS", path);
         List<String> nodesInPath = path.getNodes();
         assertEquals("A", nodesInPath.get(0));
         assertEquals("C", nodesInPath.get(nodesInPath.size() - 1));
-        // Depending on the BFS order, the path length should be 3.
         assertEquals(3, nodesInPath.size());
     }
 
     @Test
-    public void testGraphSearchNoPath() {
+    public void testUnifiedGraphSearchMultipleStepsDFS() {
+        GraphParser parser = new GraphParser();
+        // Build a graph: A -> B, B -> C, A -> D, D -> C.
+        parser.addEdge("A", "B");
+        parser.addEdge("B", "C");
+        parser.addEdge("A", "D");
+        parser.addEdge("D", "C");
+        // DFS may choose a different intermediate node; expect a valid path from A to C.
+        Path path = parser.GraphSearch(new Node("A"), new Node("C"), Algorithm.DFS);
+        assertNotNull("Expected a valid path from A to C using DFS", path);
+        List<String> nodesInPath = path.getNodes();
+        assertEquals("A", nodesInPath.get(0));
+        assertEquals("C", nodesInPath.get(nodesInPath.size() - 1));
+        assertEquals(3, nodesInPath.size());
+        String mid = nodesInPath.get(1);
+        assertTrue(mid.equals("B") || mid.equals("D"));
+    }
+
+    @Test
+    public void testUnifiedGraphSearchNoPathBFS() {
         GraphParser parser = new GraphParser();
         // Build a disconnected graph.
         parser.addEdge("A", "B");
         parser.addEdge("C", "D");
-        // There is no path from A to D.
-        Path path = parser.GraphSearch(new Node("A"), new Node("D"));
-        assertNull("Expected no path from A to D", path);
+        // There is no path from A to D using BFS.
+        Path path = parser.GraphSearch(new Node("A"), new Node("D"), Algorithm.BFS);
+        assertNull("Expected no path from A to D using BFS", path);
     }
 
     @Test
-    public void testGraphSearchNonExistentNodes() {
+    public void testUnifiedGraphSearchNoPathDFS() {
+        GraphParser parser = new GraphParser();
+        // Build a disconnected graph.
+        parser.addEdge("A", "B");
+        parser.addEdge("C", "D");
+        // There is no path from A to D using DFS.
+        Path path = parser.GraphSearch(new Node("A"), new Node("D"), Algorithm.DFS);
+        assertNull("Expected no path from A to D using DFS", path);
+    }
+
+    @Test
+    public void testUnifiedGraphSearchNonExistentNodesBFS() {
         GraphParser parser = new GraphParser();
         parser.addEdge("A", "B");
-        // Searching with a non-existent node should return null.
-        Path path = parser.GraphSearch(new Node("X"), new Node("B"));
-        assertNull("Expected no path since node X does not exist", path);
+        // Searching with a non-existent node should return null using BFS.
+        Path path = parser.GraphSearch(new Node("X"), new Node("B"), Algorithm.BFS);
+        assertNull("Expected no path since node X does not exist using BFS", path);
+    }
+
+    @Test
+    public void testUnifiedGraphSearchNonExistentNodesDFS() {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        // Searching with a non-existent node should return null using DFS.
+        Path path = parser.GraphSearch(new Node("X"), new Node("B"), Algorithm.DFS);
+        assertNull("Expected no path since node X does not exist using DFS", path);
     }
 }
