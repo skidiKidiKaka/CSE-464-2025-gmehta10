@@ -21,8 +21,8 @@ jobs:
         java-version: '11'
 
     - name: Build with Maven
-      run: mvn -B package --file GraphParser/pom.xml
+      run: mvn -B package --file PJ1/pom.xml
 
     - name: Run tests
-      run: mvn test --file GraphParser/pom.xml
-      
+      run: mvn test --file PJ1/pom.xml
+
