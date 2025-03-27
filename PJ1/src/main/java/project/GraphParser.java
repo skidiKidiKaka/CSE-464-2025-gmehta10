@@ -163,14 +163,65 @@ public class GraphParser {
         }
     }
 
-    // New DFS graph search API for the 'dfs' branch.
-    // Finds a path from the source node to the target node using DFS.
-    public Path GraphSearch(Node src, Node dst) {
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Number of nodes: ").append(nodes.size()).append("\n");
+        sb.append("Nodes: ").append(nodes).append("\n");
+        sb.append("Number of edges: ").append(edges.size()).append("\n");
+        sb.append("Edges:\n");
+        for (String[] edge : edges) {
+            sb.append(edge[0]).append(" -> ").append(edge[1]).append("\n");
+        }
+        return sb.toString();
+    }
+
+    // New unified GraphSearch API with an enum parameter.
+    // Depending on the value of 'algo' (BFS or DFS), it uses the corresponding search strategy.
+    public Path GraphSearch(Node src, Node dst, Algorithm algo) {
         String start = src.getLabel();
         String target = dst.getLabel();
         if (!nodes.contains(start) || !nodes.contains(target)) {
             return null;
         }
+        switch(algo) {
+            case BFS:
+                return bfsSearch(start, target);
+            case DFS:
+                return dfsSearch(start, target);
+            default:
+                return null;
+        }
+    }
+
+    // Private helper method for BFS search.
+    private Path bfsSearch(String start, String target) {
+        Map<String, String> prev = new HashMap<>();
+        Set<String> visited = new HashSet<>();
+        Queue<String> queue = new LinkedList<>();
+        visited.add(start);
+        queue.offer(start);
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            if (current.equals(target)) {
+                return reconstructPath(start, target, prev);
+            }
+            for (String[] edge : edges) {
+                if (edge[0].equals(current)) {
+                    String neighbor = edge[1];
+                    if (!visited.contains(neighbor)) {
+                        visited.add(neighbor);
+                        prev.put(neighbor, current);
+                        queue.offer(neighbor);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // Private helper method for DFS search.
+    private Path dfsSearch(String start, String target) {
         Set<String> visited = new HashSet<>();
         Map<String, String> prev = new HashMap<>();
         boolean found = dfs(start, target, visited, prev);
@@ -180,7 +231,7 @@ public class GraphParser {
         return reconstructPath(start, target, prev);
     }
 
-    // Recursive DFS helper method.
+    // Recursive DFS helper.
     private boolean dfs(String current, String target, Set<String> visited, Map<String, String> prev) {
         visited.add(current);
         if (current.equals(target)) {
@@ -200,7 +251,7 @@ public class GraphParser {
         return false;
     }
 
-    // Helper method to reconstruct a path from start to target.
+    // Helper method to reconstruct the path from start to target using the predecessor map.
     private Path reconstructPath(String start, String target, Map<String, String> prev) {
         List<String> path = new ArrayList<>();
         for (String at = target; at != null; at = prev.get(at)) {
@@ -211,18 +262,5 @@ public class GraphParser {
             return new Path(path);
         }
         return null;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Number of nodes: ").append(nodes.size()).append("\n");
-        sb.append("Nodes: ").append(nodes).append("\n");
-        sb.append("Number of edges: ").append(edges.size()).append("\n");
-        sb.append("Edges:\n");
-        for (String[] edge : edges) {
-            sb.append(edge[0]).append(" -> ").append(edge[1]).append("\n");
-        }
-        return sb.toString();
     }
 }
