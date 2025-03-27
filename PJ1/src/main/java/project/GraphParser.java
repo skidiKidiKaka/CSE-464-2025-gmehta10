@@ -124,7 +124,6 @@ public class GraphParser {
         }
     }
 
-
     // Remove a node and all its incident edges.
     public void removeNode(String label) {
         if (!nodes.contains(label)) {
@@ -162,6 +161,56 @@ public class GraphParser {
         if (!removed) {
             throw new IllegalArgumentException("Edge does not exist: " + srcLabel + " -> " + dstLabel);
         }
+    }
+
+    // New DFS graph search API for the 'dfs' branch.
+    // Finds a path from the source node to the target node using DFS.
+    public Path GraphSearch(Node src, Node dst) {
+        String start = src.getLabel();
+        String target = dst.getLabel();
+        if (!nodes.contains(start) || !nodes.contains(target)) {
+            return null;
+        }
+        Set<String> visited = new HashSet<>();
+        Map<String, String> prev = new HashMap<>();
+        boolean found = dfs(start, target, visited, prev);
+        if (!found) {
+            return null;
+        }
+        return reconstructPath(start, target, prev);
+    }
+
+    // Recursive DFS helper method.
+    private boolean dfs(String current, String target, Set<String> visited, Map<String, String> prev) {
+        visited.add(current);
+        if (current.equals(target)) {
+            return true;
+        }
+        for (String[] edge : edges) {
+            if (edge[0].equals(current)) {
+                String neighbor = edge[1];
+                if (!visited.contains(neighbor)) {
+                    prev.put(neighbor, current);
+                    if (dfs(neighbor, target, visited, prev)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    // Helper method to reconstruct a path from start to target.
+    private Path reconstructPath(String start, String target, Map<String, String> prev) {
+        List<String> path = new ArrayList<>();
+        for (String at = target; at != null; at = prev.get(at)) {
+            path.add(at);
+        }
+        Collections.reverse(path);
+        if (!path.isEmpty() && path.get(0).equals(start)) {
+            return new Path(path);
+        }
+        return null;
     }
 
     @Override

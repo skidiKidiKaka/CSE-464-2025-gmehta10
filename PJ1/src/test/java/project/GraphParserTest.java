@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 public class GraphParserTest {
 
@@ -104,7 +105,6 @@ public class GraphParserTest {
 //        assertTrue(tempPng.length() > 0);
 //    }
 
-
     @Test
     public void testRemoveNode() {
         GraphParser parser = new GraphParser();
@@ -170,5 +170,60 @@ public class GraphParserTest {
         parser.addEdge("A", "B");
         // Removing a non-existent edge should throw an exception.
         parser.removeEdge("B", "A");
+    }
+
+    // --- New Test Cases for DFS Graph Search ---
+
+    @Test
+    public void testGraphSearchDirectEdgeDFS() {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        // Test a direct edge search: A -> B.
+        Path path = parser.GraphSearch(new Node("A"), new Node("B"));
+        assertNotNull("Expected a valid path from A to B", path);
+        List<String> nodesInPath = path.getNodes();
+        assertEquals(2, nodesInPath.size());
+        assertEquals("A", nodesInPath.get(0));
+        assertEquals("B", nodesInPath.get(1));
+    }
+
+    @Test
+    public void testGraphSearchMultipleStepsDFS() {
+        GraphParser parser = new GraphParser();
+        // Build a graph: A -> B, B -> C, A -> D, D -> C.
+        parser.addEdge("A", "B");
+        parser.addEdge("B", "C");
+        parser.addEdge("A", "D");
+        parser.addEdge("D", "C");
+        // The DFS search should find a valid path from A to C.
+        Path path = parser.GraphSearch(new Node("A"), new Node("C"));
+        assertNotNull("Expected a valid path from A to C", path);
+        List<String> nodesInPath = path.getNodes();
+        assertEquals("A", nodesInPath.get(0));
+        assertEquals("C", nodesInPath.get(nodesInPath.size() - 1));
+        // Depending on DFS order, the intermediate node should be either B or D.
+        assertEquals(3, nodesInPath.size());
+        String mid = nodesInPath.get(1);
+        assertTrue(mid.equals("B") || mid.equals("D"));
+    }
+
+    @Test
+    public void testGraphSearchNoPathDFS() {
+        GraphParser parser = new GraphParser();
+        // Build a disconnected graph.
+        parser.addEdge("A", "B");
+        parser.addEdge("C", "D");
+        // There is no path from A to D.
+        Path path = parser.GraphSearch(new Node("A"), new Node("D"));
+        assertNull("Expected no path from A to D", path);
+    }
+
+    @Test
+    public void testGraphSearchNonExistentNodesDFS() {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        // Searching with a non-existent node should return null.
+        Path path = parser.GraphSearch(new Node("X"), new Node("B"));
+        assertNull("Expected no path since node X does not exist", path);
     }
 }
