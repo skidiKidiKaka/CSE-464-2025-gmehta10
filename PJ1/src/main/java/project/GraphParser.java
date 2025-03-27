@@ -295,16 +295,4 @@ public class GraphParser {
         return false;
     }
 
-    // Helper method to reconstruct the path from start to target using the predecessor map.
-    private Path reconstructPath(String start, String target, Map<String, String> prev) {
-        List<String> path = new ArrayList<>();
-        for (String at = target; at != null; at = prev.get(at)) {
-            path.add(at);
-        }
-        Collections.reverse(path);
-        if (!path.isEmpty() && path.get(0).equals(start)) {
-            return new Path(path);
-        }
-        return null;
-    }
 }
