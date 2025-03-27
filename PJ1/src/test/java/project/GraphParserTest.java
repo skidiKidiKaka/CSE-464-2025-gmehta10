@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 public class GraphParserTest {
 
@@ -93,18 +94,6 @@ public class GraphParserTest {
         assertTrue(content.contains("C;"));
     }
 
-//    @Test
-//    public void testOutputGraphics() throws IOException {
-//        GraphParser parser = new GraphParser();
-//        parser.addEdge("A", "B");
-//        File tempPng = File.createTempFile("graphOutput", ".png");
-//        tempPng.deleteOnExit();
-//        parser.outputGraphics(tempPng.getAbsolutePath(), "png");
-//        assertTrue(tempPng.exists());
-//        assertTrue(tempPng.length() > 0);
-//    }
-
-
     @Test
     public void testRemoveNode() {
         GraphParser parser = new GraphParser();
@@ -170,5 +159,57 @@ public class GraphParserTest {
         parser.addEdge("A", "B");
         // Removing a non-existent edge should throw an exception.
         parser.removeEdge("B", "A");
+    }
+
+
+    @Test
+    public void testGraphSearchDirectEdge() {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        // Test a direct edge search: A -> B.
+        Path path = parser.GraphSearch(new Node("A"), new Node("B"));
+        assertNotNull("Expected a valid path from A to B", path);
+        List<String> nodesInPath = path.getNodes();
+        assertEquals(2, nodesInPath.size());
+        assertEquals("A", nodesInPath.get(0));
+        assertEquals("B", nodesInPath.get(1));
+    }
+
+    @Test
+    public void testGraphSearchMultipleSteps() {
+        GraphParser parser = new GraphParser();
+        // Build a graph: A -> B, B -> C, A -> D, D -> C.
+        parser.addEdge("A", "B");
+        parser.addEdge("B", "C");
+        parser.addEdge("A", "D");
+        parser.addEdge("D", "C");
+        // Expect the shortest path A -> B -> C.
+        Path path = parser.GraphSearch(new Node("A"), new Node("C"));
+        assertNotNull("Expected a valid path from A to C", path);
+        List<String> nodesInPath = path.getNodes();
+        assertEquals("A", nodesInPath.get(0));
+        assertEquals("C", nodesInPath.get(nodesInPath.size() - 1));
+        // Depending on the BFS order, the path length should be 3.
+        assertEquals(3, nodesInPath.size());
+    }
+
+    @Test
+    public void testGraphSearchNoPath() {
+        GraphParser parser = new GraphParser();
+        // Build a disconnected graph.
+        parser.addEdge("A", "B");
+        parser.addEdge("C", "D");
+        // There is no path from A to D.
+        Path path = parser.GraphSearch(new Node("A"), new Node("D"));
+        assertNull("Expected no path from A to D", path);
+    }
+
+    @Test
+    public void testGraphSearchNonExistentNodes() {
+        GraphParser parser = new GraphParser();
+        parser.addEdge("A", "B");
+        // Searching with a non-existent node should return null.
+        Path path = parser.GraphSearch(new Node("X"), new Node("B"));
+        assertNull("Expected no path since node X does not exist", path);
     }
 }

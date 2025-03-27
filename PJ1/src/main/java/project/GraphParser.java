@@ -124,7 +124,6 @@ public class GraphParser {
         }
     }
 
-
     // Remove a node and all its incident edges.
     public void removeNode(String label) {
         if (!nodes.contains(label)) {
@@ -162,6 +161,50 @@ public class GraphParser {
         if (!removed) {
             throw new IllegalArgumentException("Edge does not exist: " + srcLabel + " -> " + dstLabel);
         }
+    }
+
+    // New BFS graph search API (for the 'bfs' branch)
+    public Path GraphSearch(Node src, Node dst) {
+        String start = src.getLabel();
+        String target = dst.getLabel();
+        if (!nodes.contains(start) || !nodes.contains(target)) {
+            return null;
+        }
+        Map<String, String> prev = new HashMap<>();
+        Set<String> visited = new HashSet<>();
+        Queue<String> queue = new LinkedList<>();
+        visited.add(start);
+        queue.offer(start);
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            if (current.equals(target)) {
+                return reconstructPath(start, target, prev);
+            }
+            for (String[] edge : edges) {
+                if (edge[0].equals(current)) {
+                    String neighbor = edge[1];
+                    if (!visited.contains(neighbor)) {
+                        visited.add(neighbor);
+                        prev.put(neighbor, current);
+                        queue.offer(neighbor);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // Helper method to reconstruct a path from start to target.
+    private Path reconstructPath(String start, String target, Map<String, String> prev) {
+        List<String> path = new ArrayList<>();
+        for (String at = target; at != null; at = prev.get(at)) {
+            path.add(at);
+        }
+        Collections.reverse(path);
+        if (!path.isEmpty() && path.get(0).equals(start)) {
+            return new Path(path);
+        }
+        return null;
     }
 
     @Override
