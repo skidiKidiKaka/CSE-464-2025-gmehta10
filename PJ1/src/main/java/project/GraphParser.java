@@ -17,6 +17,7 @@ public class GraphParser {
         edges = new ArrayList<>();
     }
 
+    // --- Parsing a DOT file ---
     public void parseGraph(String filepath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filepath))) {
             String line;
@@ -52,6 +53,7 @@ public class GraphParser {
         }
     }
 
+    // --- Adding nodes/edges ---
     public boolean addNode(String label) {
         return nodes.add(label);
     }
@@ -63,6 +65,7 @@ public class GraphParser {
     }
 
     public boolean addEdge(String srcLabel, String dstLabel) {
+        // Avoid duplicate edges
         for (String[] edge : edges) {
             if (edge[0].equals(srcLabel) && edge[1].equals(dstLabel)) {
                 return false;
@@ -74,12 +77,14 @@ public class GraphParser {
         return true;
     }
 
+    // --- Output methods ---
     public String toDOTString() {
         StringBuilder sb = new StringBuilder();
         sb.append("digraph G {\n");
         for (String[] edge : edges) {
             sb.append("  ").append(edge[0]).append(" -> ").append(edge[1]).append(";\n");
         }
+        // If there are any isolated nodes (with no edges), include them
         Set<String> connectedNodes = new HashSet<>();
         for (String[] edge : edges) {
             connectedNodes.add(edge[0]);
@@ -124,29 +129,28 @@ public class GraphParser {
         }
     }
 
-    // Remove a node and all its incident edges.
+    // --- Removal APIs ---
     public void removeNode(String label) {
         if (!nodes.contains(label)) {
             throw new IllegalArgumentException("Node does not exist: " + label);
         }
         nodes.remove(label);
-        // Remove any edges incident to this node.
         edges.removeIf(edge -> edge[0].equals(label) || edge[1].equals(label));
     }
 
-    // Remove multiple nodes. First, check that every node exists.
     public void removeNodes(String[] labels) {
+        // First verify all exist
         for (String label : labels) {
             if (!nodes.contains(label)) {
                 throw new IllegalArgumentException("Node does not exist: " + label);
             }
         }
+        // Then remove them
         for (String label : labels) {
             removeNode(label);
         }
     }
 
-    // Remove an edge.
     public void removeEdge(String srcLabel, String dstLabel) {
         boolean removed = false;
         Iterator<String[]> iterator = edges.iterator();
@@ -163,28 +167,15 @@ public class GraphParser {
         }
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Number of nodes: ").append(nodes.size()).append("\n");
-        sb.append("Nodes: ").append(nodes).append("\n");
-        sb.append("Number of edges: ").append(edges.size()).append("\n");
-        sb.append("Edges:\n");
-        for (String[] edge : edges) {
-            sb.append(edge[0]).append(" -> ").append(edge[1]).append("\n");
-        }
-        return sb.toString();
-    }
-
-    // New unified GraphSearch API with an enum parameter.
-    // Depending on the value of 'algo' (BFS or DFS), it uses the corresponding search strategy.
+    // --- Unified GraphSearch API (with BFS or DFS) ---
     public Path GraphSearch(Node src, Node dst, Algorithm algo) {
         String start = src.getLabel();
         String target = dst.getLabel();
+        // Return null if either node doesn't exist
         if (!nodes.contains(start) || !nodes.contains(target)) {
             return null;
         }
-        switch(algo) {
+        switch (algo) {
             case BFS:
                 return bfsSearch(start, target);
             case DFS:
@@ -194,13 +185,14 @@ public class GraphParser {
         }
     }
 
-    // Private helper method for BFS search.
+    // BFS helper
     private Path bfsSearch(String start, String target) {
         Map<String, String> prev = new HashMap<>();
         Set<String> visited = new HashSet<>();
         Queue<String> queue = new LinkedList<>();
         visited.add(start);
         queue.offer(start);
+
         while (!queue.isEmpty()) {
             String current = queue.poll();
             if (current.equals(target)) {
@@ -220,7 +212,7 @@ public class GraphParser {
         return null;
     }
 
-    // Private helper method for DFS search.
+    // DFS helper
     private Path dfsSearch(String start, String target) {
         Set<String> visited = new HashSet<>();
         Map<String, String> prev = new HashMap<>();
@@ -231,7 +223,6 @@ public class GraphParser {
         return reconstructPath(start, target, prev);
     }
 
-    // Recursive DFS helper.
     private boolean dfs(String current, String target, Set<String> visited, Map<String, String> prev) {
         visited.add(current);
         if (current.equals(target)) {
@@ -251,7 +242,7 @@ public class GraphParser {
         return false;
     }
 
-    // Helper method to reconstruct the path from start to target using the predecessor map.
+    // Only ONE reconstructPath method
     private Path reconstructPath(String start, String target, Map<String, String> prev) {
         List<String> path = new ArrayList<>();
         for (String at = target; at != null; at = prev.get(at)) {
@@ -262,5 +253,18 @@ public class GraphParser {
             return new Path(path);
         }
         return null;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Number of nodes: ").append(nodes.size()).append("\n");
+        sb.append("Nodes: ").append(nodes).append("\n");
+        sb.append("Number of edges: ").append(edges.size()).append("\n");
+        sb.append("Edges:\n");
+        for (String[] edge : edges) {
+            sb.append(edge[0]).append(" -> ").append(edge[1]).append("\n");
+        }
+        return sb.toString();
     }
 }

@@ -94,16 +94,6 @@ public class GraphParserTest {
         assertTrue(content.contains("C;"));
     }
 
-//    @Test
-//    public void testOutputGraphics() throws IOException {
-//        GraphParser parser = new GraphParser();
-//        parser.addEdge("A", "B");
-//        File tempPng = File.createTempFile("graphOutput", ".png");
-//        tempPng.deleteOnExit();
-//        parser.outputGraphics(tempPng.getAbsolutePath(), "png");
-//        assertTrue(tempPng.exists());
-//        assertTrue(tempPng.length() > 0);
-//    }
 
     @Test
     public void testRemoveNode() {
@@ -172,7 +162,6 @@ public class GraphParserTest {
         parser.removeEdge("B", "A");
     }
 
-    // --- New Test Cases for the Unified GraphSearch API ---
 
     @Test
     public void testUnifiedGraphSearchDirectEdgeBFS() {
