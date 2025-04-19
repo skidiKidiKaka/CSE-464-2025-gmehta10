@@ -38,14 +38,14 @@ public class GraphParser {
     public void parseGraph(String filepath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filepath))) {
             String raw;
-            boolean inGraphSection = false;
+            boolean inGraph = false;
             while ((raw = br.readLine()) != null) {
-                String line = cleanLine(raw);   // updated call
+                String line = cleanLine(raw);
                 if (line.startsWith("digraph")) {
-                    inGraphSection = true;
+                    inGraph = true;
                     continue;
                 }
-                if (!inGraphSection || line.isEmpty() || line.equals("{") || line.equals("}")) {
+                if (!inGraph || line.isEmpty() || line.equals("{") || line.equals("}")) {
                     continue;
                 }
                 if (line.contains("->")) {
@@ -55,7 +55,7 @@ public class GraphParser {
                         String dst = parts[1].trim();
                         nodes.add(src);
                         nodes.add(dst);
-                        edges.add(new String[] { src, dst });
+                        edges.add(new String[]{ src, dst });
                     }
                 }
             }
@@ -82,28 +82,33 @@ public class GraphParser {
         }
         nodes.add(srcLabel);
         nodes.add(dstLabel);
-        edges.add(new String[] { srcLabel, dstLabel });
+        edges.add(new String[]{ srcLabel, dstLabel });
         return true;
     }
 
     public String toDOTString() {
         StringBuilder sb = new StringBuilder();
         sb.append("digraph G {\n");
+        appendEdges(sb);                          // ← extracted helper
+        Set<String> connected = new HashSet<>();
         for (String[] edge : edges) {
-            sb.append("  ").append(edge[0]).append(" -> ").append(edge[1]).append(";\n");
-        }
-        Set<String> connectedNodes = new HashSet<>();
-        for (String[] edge : edges) {
-            connectedNodes.add(edge[0]);
-            connectedNodes.add(edge[1]);
+            connected.add(edge[0]);
+            connected.add(edge[1]);
         }
         for (String node : nodes) {
-            if (!connectedNodes.contains(node)) {
+            if (!connected.contains(node)) {
                 sb.append("  ").append(node).append(";\n");
             }
         }
         sb.append("}\n");
         return sb.toString();
+    }
+
+    // New helper for Refactor 5
+    private void appendEdges(StringBuilder sb) {
+        for (String[] edge : edges) {
+            sb.append("  ").append(edge[0]).append(" -> ").append(edge[1]).append(";\n");
+        }
     }
 
     public void outputDOTGraph(String filepath) {
@@ -112,20 +117,20 @@ public class GraphParser {
 
     public void outputGraphics(String filepath, String format) {
         try {
-            File tempDot = File.createTempFile("graph", ".dot");
-            outputDOTGraph(tempDot.getAbsolutePath());
-            ProcessBuilder pb = new ProcessBuilder("dot", "-T" + format, tempDot.getAbsolutePath(), "-o", filepath);
+            File temp = File.createTempFile("graph", ".dot");
+            outputDOTGraph(temp.getAbsolutePath());
+            ProcessBuilder pb = new ProcessBuilder("dot", "-T" + format, temp.getAbsolutePath(), "-o", filepath);
             pb.redirectErrorStream(true);
-            Process process = pb.start();
-            process.waitFor();
-            tempDot.delete();
+            Process p = pb.start();
+            p.waitFor();
+            temp.delete();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public void outputGraph(String filepath) {
-        writeToFile(filepath, this.toString());
+        writeToFile(filepath, toString());
     }
 
     public void removeNode(String label) {
@@ -133,7 +138,7 @@ public class GraphParser {
             throw new IllegalArgumentException("Node does not exist: " + label);
         }
         nodes.remove(label);
-        edges.removeIf(edge -> edge[0].equals(label) || edge[1].equals(label));
+        edges.removeIf(e -> e[0].equals(label) || e[1].equals(label));
     }
 
     public void removeNodes(String[] labels) {
@@ -147,19 +152,19 @@ public class GraphParser {
         }
     }
 
-    public void removeEdge(String srcLabel, String dstLabel) {
-        boolean removed = false;
-        Iterator<String[]> iterator = edges.iterator();
-        while (iterator.hasNext()) {
-            String[] edge = iterator.next();
-            if (edge[0].equals(srcLabel) && edge[1].equals(dstLabel)) {
-                iterator.remove();
-                removed = true;
+    public void removeEdge(String src, String dst) {
+        boolean found = false;
+        Iterator<String[]> it = edges.iterator();
+        while (it.hasNext()) {
+            String[] e = it.next();
+            if (e[0].equals(src) && e[1].equals(dst)) {
+                it.remove();
+                found = true;
                 break;
             }
         }
-        if (!removed) {
-            throw new IllegalArgumentException("Edge does not exist: " + srcLabel + " -> " + dstLabel);
+        if (!found) {
+            throw new IllegalArgumentException("Edge does not exist: " + src + " -> " + dst);
         }
     }
 
@@ -170,31 +175,31 @@ public class GraphParser {
         if (!nodes.contains(start) || !nodes.contains(target)) {
             return null;
         }
-        Map<String, String> prev = new HashMap<>();
+        Map<String,String> prev = new HashMap<>();
         Set<String> visited = new HashSet<>();
-        Queue<String> queue = new LinkedList<>();
+        Queue<String> q = new LinkedList<>();
         visited.add(start);
-        queue.offer(start);
+        q.offer(start);
 
-        while (!queue.isEmpty()) {
-            String current = queue.poll();
-            if (current.equals(target)) {
+        while (!q.isEmpty()) {
+            String cur = q.poll();
+            if (cur.equals(target)) {
                 return reconstructPath(start, target, prev);
             }
             for (String[] edge : edges) {
                 String from = edge[0];
                 String to   = edge[1];
-                if (from.equals(current) && !visited.contains(to)) {
+                if (from.equals(cur) && !visited.contains(to)) {
                     visited.add(to);
-                    prev.put(to, current);
-                    queue.offer(to);
+                    prev.put(to, cur);
+                    q.offer(to);
                 }
             }
         }
         return null;
     }
 
-    private Path reconstructPath(String start, String target, Map<String, String> prev) {
+    private Path reconstructPath(String start, String target, Map<String,String> prev) {
         List<String> path = new ArrayList<>();
         for (String at = target; at != null; at = prev.get(at)) {
             path.add(at);
@@ -223,34 +228,31 @@ public class GraphParser {
             return null;
         }
         switch (algo) {
-            case BFS:
-                return bfsSearch(start, target);
-            case DFS:
-                return dfsSearch(start, target);
-            default:
-                return null;
+            case BFS: return bfsSearch(start, target);
+            case DFS: return dfsSearch(start, target);
+            default:  return null;
         }
     }
 
     private Path bfsSearch(String start, String target) {
-        Map<String, String> prev = new HashMap<>();
+        Map<String,String> prev = new HashMap<>();
         Set<String> visited = new HashSet<>();
-        Queue<String> queue = new LinkedList<>();
+        Queue<String> q = new LinkedList<>();
         visited.add(start);
-        queue.offer(start);
+        q.offer(start);
 
-        while (!queue.isEmpty()) {
-            String current = queue.poll();
-            if (current.equals(target)) {
+        while (!q.isEmpty()) {
+            String cur = q.poll();
+            if (cur.equals(target)) {
                 return reconstructPath(start, target, prev);
             }
             for (String[] edge : edges) {
                 String from = edge[0];
                 String to   = edge[1];
-                if (from.equals(current) && !visited.contains(to)) {
+                if (from.equals(cur) && !visited.contains(to)) {
                     visited.add(to);
-                    prev.put(to, current);
-                    queue.offer(to);
+                    prev.put(to, cur);
+                    q.offer(to);
                 }
             }
         }
@@ -259,23 +261,19 @@ public class GraphParser {
 
     private Path dfsSearch(String start, String target) {
         Set<String> visited = new HashSet<>();
-        Map<String, String> prev = new HashMap<>();
+        Map<String,String> prev = new HashMap<>();
         return dfs(start, target, visited, prev) ? reconstructPath(start, target, prev) : null;
     }
 
-    private boolean dfs(String current, String target, Set<String> visited, Map<String, String> prev) {
-        visited.add(current);
-        if (current.equals(target)) {
-            return true;
-        }
+    private boolean dfs(String cur, String target, Set<String> visited, Map<String,String> prev) {
+        visited.add(cur);
+        if (cur.equals(target)) return true;
         for (String[] edge : edges) {
             String from = edge[0];
             String to   = edge[1];
-            if (from.equals(current) && !visited.contains(to)) {
-                prev.put(to, current);
-                if (dfs(to, target, visited, prev)) {
-                    return true;
-                }
+            if (from.equals(cur) && !visited.contains(to)) {
+                prev.put(to, cur);
+                if (dfs(to, target, visited, prev)) return true;
             }
         }
         return false;
