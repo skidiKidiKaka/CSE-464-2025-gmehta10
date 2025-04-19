@@ -1,11 +1,6 @@
 package project;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 
 public class GraphParser {
@@ -17,7 +12,21 @@ public class GraphParser {
         edges = new ArrayList<>();
     }
 
-    // Refactor 4: Rename Method – cleanLine (was normalizeLine)
+    // Question2: Template Pattern – delegate search to templates
+    public Path GraphSearch(Node src, Node dst, Algorithm algo) {
+        String start = src.getLabel();
+        String target = dst.getLabel();
+        switch (algo) {
+            case BFS:
+                return new BFSTemplate(nodes, edges).search(start, target);
+            case DFS:
+                return new DFSTemplate(nodes, edges).search(start, target);
+            default:
+                return null;
+        }
+    }
+
+    // Refactor4: Rename Method – cleanLine (was normalizeLine)
     private String cleanLine(String rawLine) {
         String line = rawLine.trim();
         if (line.endsWith(";")) {
@@ -26,7 +35,7 @@ public class GraphParser {
         return line;
     }
 
-    // Refactor 3: Extract Method to consolidate file writing
+    // Refactor3: Extract Method to consolidate file writing
     private void writeToFile(String filepath, String content) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(filepath))) {
             writer.print(content);
@@ -55,7 +64,7 @@ public class GraphParser {
                         String dst = parts[1].trim();
                         nodes.add(src);
                         nodes.add(dst);
-                        edges.add(new String[]{ src, dst });
+                        edges.add(new String[] { src, dst });
                     }
                 }
             }
@@ -82,14 +91,14 @@ public class GraphParser {
         }
         nodes.add(srcLabel);
         nodes.add(dstLabel);
-        edges.add(new String[]{ srcLabel, dstLabel });
+        edges.add(new String[] { srcLabel, dstLabel });
         return true;
     }
 
     public String toDOTString() {
         StringBuilder sb = new StringBuilder();
         sb.append("digraph G {\n");
-        appendEdges(sb);                          // ← extracted helper
+        appendEdges(sb);
         Set<String> connected = new HashSet<>();
         for (String[] edge : edges) {
             connected.add(edge[0]);
@@ -104,7 +113,7 @@ public class GraphParser {
         return sb.toString();
     }
 
-    // New helper for Refactor 5
+    // Refactor5: Extract Method – appendEdges
     private void appendEdges(StringBuilder sb) {
         for (String[] edge : edges) {
             sb.append("  ").append(edge[0]).append(" -> ").append(edge[1]).append(";\n");
@@ -119,7 +128,8 @@ public class GraphParser {
         try {
             File temp = File.createTempFile("graph", ".dot");
             outputDOTGraph(temp.getAbsolutePath());
-            ProcessBuilder pb = new ProcessBuilder("dot", "-T" + format, temp.getAbsolutePath(), "-o", filepath);
+            ProcessBuilder pb = new ProcessBuilder("dot", "-T" + format,
+                    temp.getAbsolutePath(), "-o", filepath);
             pb.redirectErrorStream(true);
             Process p = pb.start();
             p.waitFor();
@@ -168,7 +178,7 @@ public class GraphParser {
         }
     }
 
-    // Refactor 2: Extract Variable in BFS/DFS loops
+    // Refactor2: Extract Variable in BFS/DFS loops
     public Path GraphSearch(Node src, Node dst) {
         String start = src.getLabel();
         String target = dst.getLabel();
@@ -219,63 +229,5 @@ public class GraphParser {
             sb.append(edge[0]).append(" -> ").append(edge[1]).append("\n");
         }
         return sb.toString();
-    }
-
-    public Path GraphSearch(Node src, Node dst, Algorithm algo) {
-        String start = src.getLabel();
-        String target = dst.getLabel();
-        if (!nodes.contains(start) || !nodes.contains(target)) {
-            return null;
-        }
-        switch (algo) {
-            case BFS: return bfsSearch(start, target);
-            case DFS: return dfsSearch(start, target);
-            default:  return null;
-        }
-    }
-
-    private Path bfsSearch(String start, String target) {
-        Map<String,String> prev = new HashMap<>();
-        Set<String> visited = new HashSet<>();
-        Queue<String> q = new LinkedList<>();
-        visited.add(start);
-        q.offer(start);
-
-        while (!q.isEmpty()) {
-            String cur = q.poll();
-            if (cur.equals(target)) {
-                return reconstructPath(start, target, prev);
-            }
-            for (String[] edge : edges) {
-                String from = edge[0];
-                String to   = edge[1];
-                if (from.equals(cur) && !visited.contains(to)) {
-                    visited.add(to);
-                    prev.put(to, cur);
-                    q.offer(to);
-                }
-            }
-        }
-        return null;
-    }
-
-    private Path dfsSearch(String start, String target) {
-        Set<String> visited = new HashSet<>();
-        Map<String,String> prev = new HashMap<>();
-        return dfs(start, target, visited, prev) ? reconstructPath(start, target, prev) : null;
-    }
-
-    private boolean dfs(String cur, String target, Set<String> visited, Map<String,String> prev) {
-        visited.add(cur);
-        if (cur.equals(target)) return true;
-        for (String[] edge : edges) {
-            String from = edge[0];
-            String to   = edge[1];
-            if (from.equals(cur) && !visited.contains(to)) {
-                prev.put(to, cur);
-                if (dfs(to, target, visited, prev)) return true;
-            }
-        }
-        return false;
     }
 }
