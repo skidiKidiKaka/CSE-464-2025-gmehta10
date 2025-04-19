@@ -2,15 +2,15 @@ package project;
 
 import java.util.*;
 
-
 public abstract class GraphSearchTemplate {
     protected Set<String> nodes;
     protected List<String[]> edges;
+
     protected Set<String> visited;
-    protected Map<String, String> parentMap;
+    protected Map<String,String> parentMap;
     protected Collection<String> frontier;
 
-    public GraphSearchTemplate(Set<String> nodes, List<String[]> edges) {
+    protected GraphSearchTemplate(Set<String> nodes, List<String[]> edges) {
         this.nodes = nodes;
         this.edges = edges;
     }
@@ -31,11 +31,11 @@ public abstract class GraphSearchTemplate {
             }
             for (String[] edge : edges) {
                 if (edge[0].equals(current)) {
-                    String neighbor = edge[1];
-                    if (!visited.contains(neighbor)) {
-                        visited.add(neighbor);
-                        parentMap.put(neighbor, current);
-                        addToFrontier(neighbor);
+                    String neighbour = edge[1];
+                    if (!visited.contains(neighbour)) {
+                        visited.add(neighbour);
+                        parentMap.put(neighbour, current);
+                        addToFrontier(neighbour);
                     }
                 }
             }
@@ -49,9 +49,7 @@ public abstract class GraphSearchTemplate {
             path.add(at);
         }
         Collections.reverse(path);
-        return path.size() > 0 && path.get(0).equals(start)
-                ? new Path(path)
-                : null;
+        return path.get(0).equals(start) ? new Path(path) : null;
     }
 
     protected abstract Collection<String> createFrontier();

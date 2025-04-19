@@ -2,13 +2,15 @@ package project;
 
 import java.util.*;
 
-public class BFSTemplate extends GraphSearchTemplate {
-    public BFSTemplate(Set<String> nodes, List<String[]> edges) {
+public class RandomWalkTemplate extends GraphSearchTemplate {
+    private final Random rng = new Random();
+
+    public RandomWalkTemplate(Set<String> nodes, List<String[]> edges) {
         super(nodes, edges);
     }
 
     @Override protected Collection<String> createFrontier() {
-        return new LinkedList<>();
+        return new ArrayList<>();  // random‐access removal
     }
 
     @Override protected void initialize(String start) {
@@ -24,10 +26,13 @@ public class BFSTemplate extends GraphSearchTemplate {
     }
 
     @Override protected String getNext() {
-        return ((Queue<String>) frontier).poll();
+        // remove a random element
+        List<String> list = (List<String>) frontier;
+        int idx = rng.nextInt(list.size());
+        return list.remove(idx);
     }
 
     @Override protected void addToFrontier(String node) {
-        ((Queue<String>) frontier).offer(node);
+        frontier.add(node);
     }
 }

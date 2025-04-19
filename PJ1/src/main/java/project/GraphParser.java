@@ -3,7 +3,6 @@ package project;
 import java.io.*;
 import java.util.*;
 
-
 public class GraphParser {
     private Set<String> nodes;
     private List<String[]> edges;
@@ -13,13 +12,36 @@ public class GraphParser {
         edges = new ArrayList<>();
     }
 
-    // Question3: Strategy Pattern – choose BFS or DFS at runtime
+    // Question3: Strategy/Template dispatch via enum
     public Path GraphSearch(Node src, Node dst, Algorithm algo) {
-        String start  = src.getLabel();
-        String target = dst.getLabel();
-        GraphSearchStrategy strat =
-                GraphSearchStrategyFactory.getStrategy(algo, nodes, edges);
-        return strat.search(start, target);
+        switch (algo) {
+            case BFS:
+                return bfsTemplateSearch(src, dst);
+            case DFS:
+                return dfsTemplateSearch(src, dst);
+            case RANDOMWALK:
+                return randomWalkTemplateSearch(src, dst);
+            default:
+                return null;
+        }
+    }
+
+    // Template-based BFS
+    public Path bfsTemplateSearch(Node src, Node dst) {
+        return new BFSTemplate(nodes, edges)
+                .search(src.getLabel(), dst.getLabel());
+    }
+
+    // Template-based DFS
+    public Path dfsTemplateSearch(Node src, Node dst) {
+        return new DFSTemplate(nodes, edges)
+                .search(src.getLabel(), dst.getLabel());
+    }
+
+    // Template-based Random Walk
+    public Path randomWalkTemplateSearch(Node src, Node dst) {
+        return new RandomWalkTemplate(nodes, edges)
+                .search(src.getLabel(), dst.getLabel());
     }
 
     // Refactor4: Rename Method – cleanLine (was normalizeLine)
@@ -60,7 +82,7 @@ public class GraphParser {
                         String dst = parts[1].trim();
                         nodes.add(src);
                         nodes.add(dst);
-                        edges.add(new String[] { src, dst });
+                        edges.add(new String[]{ src, dst });
                     }
                 }
             }
@@ -87,7 +109,7 @@ public class GraphParser {
         }
         nodes.add(srcLabel);
         nodes.add(dstLabel);
-        edges.add(new String[] { srcLabel, dstLabel });
+        edges.add(new String[]{ srcLabel, dstLabel });
         return true;
     }
 
