@@ -17,8 +17,8 @@ public class GraphParser {
         edges = new ArrayList<>();
     }
 
-    // Refactor 1: Extract Method to normalize and trim lines
-    private String normalizeLine(String rawLine) {
+    // Refactor 4: Rename Method – cleanLine (was normalizeLine)
+    private String cleanLine(String rawLine) {
         String line = rawLine.trim();
         if (line.endsWith(";")) {
             line = line.substring(0, line.length() - 1).trim();
@@ -40,7 +40,7 @@ public class GraphParser {
             String raw;
             boolean inGraphSection = false;
             while ((raw = br.readLine()) != null) {
-                String line = normalizeLine(raw);
+                String line = cleanLine(raw);   // updated call
                 if (line.startsWith("digraph")) {
                     inGraphSection = true;
                     continue;
@@ -106,7 +106,6 @@ public class GraphParser {
         return sb.toString();
     }
 
-    // use helper for DOT output
     public void outputDOTGraph(String filepath) {
         writeToFile(filepath, toDOTString());
     }
@@ -125,12 +124,10 @@ public class GraphParser {
         }
     }
 
-    // use helper for plain-text output
     public void outputGraph(String filepath) {
         writeToFile(filepath, this.toString());
     }
 
-    // Remove a node and all its incident edges.
     public void removeNode(String label) {
         if (!nodes.contains(label)) {
             throw new IllegalArgumentException("Node does not exist: " + label);
@@ -139,7 +136,6 @@ public class GraphParser {
         edges.removeIf(edge -> edge[0].equals(label) || edge[1].equals(label));
     }
 
-    // Remove multiple nodes. First, check that every node exists.
     public void removeNodes(String[] labels) {
         for (String label : labels) {
             if (!nodes.contains(label)) {
@@ -151,7 +147,6 @@ public class GraphParser {
         }
     }
 
-    // Remove an edge.
     public void removeEdge(String srcLabel, String dstLabel) {
         boolean removed = false;
         Iterator<String[]> iterator = edges.iterator();
@@ -188,7 +183,7 @@ public class GraphParser {
             }
             for (String[] edge : edges) {
                 String from = edge[0];
-                String to   = edge[1];    // extracted neighbor variable
+                String to   = edge[1];
                 if (from.equals(current) && !visited.contains(to)) {
                     visited.add(to);
                     prev.put(to, current);
@@ -221,7 +216,6 @@ public class GraphParser {
         return sb.toString();
     }
 
-    // Unified GraphSearch API using enum parameter
     public Path GraphSearch(Node src, Node dst, Algorithm algo) {
         String start = src.getLabel();
         String target = dst.getLabel();
