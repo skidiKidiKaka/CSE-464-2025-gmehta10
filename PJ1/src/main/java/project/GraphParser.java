@@ -17,7 +17,7 @@ public class GraphParser {
         edges = new ArrayList<>();
     }
 
-    // Refactor 1: Extract Method to normalize and trim lines
+    // Refactor 1: Extract Method to normalize and trim lines
     private String normalizeLine(String rawLine) {
         String line = rawLine.trim();
         if (line.endsWith(";")) {
@@ -165,7 +165,7 @@ public class GraphParser {
         }
     }
 
-    // New BFS graph search API (for the 'bfs' branch)
+    // --- Refactor 2: Extract Variable in BFS/DFS loops ---
     public Path GraphSearch(Node src, Node dst) {
         String start = src.getLabel();
         String target = dst.getLabel();
@@ -177,36 +177,32 @@ public class GraphParser {
         Queue<String> queue = new LinkedList<>();
         visited.add(start);
         queue.offer(start);
+
         while (!queue.isEmpty()) {
             String current = queue.poll();
             if (current.equals(target)) {
                 return reconstructPath(start, target, prev);
             }
             for (String[] edge : edges) {
-                if (edge[0].equals(current)) {
-                    String neighbor = edge[1];
-                    if (!visited.contains(neighbor)) {
-                        visited.add(neighbor);
-                        prev.put(neighbor, current);
-                        queue.offer(neighbor);
-                    }
+                String from = edge[0];
+                String to   = edge[1];
+                if (from.equals(current) && !visited.contains(to)) {
+                    visited.add(to);
+                    prev.put(to, current);
+                    queue.offer(to);
                 }
             }
         }
         return null;
     }
 
-    // Helper method to reconstruct a path from start to target.
     private Path reconstructPath(String start, String target, Map<String, String> prev) {
         List<String> path = new ArrayList<>();
         for (String at = target; at != null; at = prev.get(at)) {
             path.add(at);
         }
         Collections.reverse(path);
-        if (!path.isEmpty() && path.get(0).equals(start)) {
-            return new Path(path);
-        }
-        return null;
+        return (!path.isEmpty() && path.get(0).equals(start)) ? new Path(path) : null;
     }
 
     @Override
@@ -222,7 +218,7 @@ public class GraphParser {
         return sb.toString();
     }
 
-    // New unified GraphSearch API with an enum parameter.
+    // Unified GraphSearch API using enum parameter
     public Path GraphSearch(Node src, Node dst, Algorithm algo) {
         String start = src.getLabel();
         String target = dst.getLabel();
@@ -239,57 +235,49 @@ public class GraphParser {
         }
     }
 
-    // Private helper method for BFS search.
     private Path bfsSearch(String start, String target) {
         Map<String, String> prev = new HashMap<>();
         Set<String> visited = new HashSet<>();
         Queue<String> queue = new LinkedList<>();
         visited.add(start);
         queue.offer(start);
+
         while (!queue.isEmpty()) {
             String current = queue.poll();
             if (current.equals(target)) {
                 return reconstructPath(start, target, prev);
             }
             for (String[] edge : edges) {
-                if (edge[0].equals(current)) {
-                    String neighbor = edge[1];
-                    if (!visited.contains(neighbor)) {
-                        visited.add(neighbor);
-                        prev.put(neighbor, current);
-                        queue.offer(neighbor);
-                    }
+                String from = edge[0];
+                String to   = edge[1];
+                if (from.equals(current) && !visited.contains(to)) {
+                    visited.add(to);
+                    prev.put(to, current);
+                    queue.offer(to);
                 }
             }
         }
         return null;
     }
 
-    // Private helper method for DFS search.
     private Path dfsSearch(String start, String target) {
         Set<String> visited = new HashSet<>();
         Map<String, String> prev = new HashMap<>();
-        boolean found = dfs(start, target, visited, prev);
-        if (!found) {
-            return null;
-        }
-        return reconstructPath(start, target, prev);
+        return dfs(start, target, visited, prev) ? reconstructPath(start, target, prev) : null;
     }
 
-    // Recursive DFS helper.
     private boolean dfs(String current, String target, Set<String> visited, Map<String, String> prev) {
         visited.add(current);
         if (current.equals(target)) {
             return true;
         }
         for (String[] edge : edges) {
-            if (edge[0].equals(current)) {
-                String neighbor = edge[1];
-                if (!visited.contains(neighbor)) {
-                    prev.put(neighbor, current);
-                    if (dfs(neighbor, target, visited, prev)) {
-                        return true;
-                    }
+            String from = edge[0];
+            String to   = edge[1];
+            if (from.equals(current) && !visited.contains(to)) {
+                prev.put(to, current);
+                if (dfs(to, target, visited, prev)) {
+                    return true;
                 }
             }
         }
