@@ -17,24 +17,27 @@ public class GraphParser {
         edges = new ArrayList<>();
     }
 
+    // Refactor 1: Extract Method to normalize and trim lines
+    private String normalizeLine(String rawLine) {
+        String line = rawLine.trim();
+        if (line.endsWith(";")) {
+            line = line.substring(0, line.length() - 1).trim();
+        }
+        return line;
+    }
+
     public void parseGraph(String filepath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filepath))) {
-            String line;
+            String raw;
             boolean inGraphSection = false;
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
+            while ((raw = br.readLine()) != null) {
+                String line = normalizeLine(raw);
                 if (line.startsWith("digraph")) {
                     inGraphSection = true;
                     continue;
                 }
-                if (!inGraphSection) {
+                if (!inGraphSection || line.isEmpty() || line.equals("{") || line.equals("}")) {
                     continue;
-                }
-                if (line.startsWith("{") || line.startsWith("}")) {
-                    continue;
-                }
-                if (line.endsWith(";")) {
-                    line = line.substring(0, line.length() - 1).trim();
                 }
                 if (line.contains("->")) {
                     String[] parts = line.split("->");
@@ -130,7 +133,6 @@ public class GraphParser {
             throw new IllegalArgumentException("Node does not exist: " + label);
         }
         nodes.remove(label);
-        // Remove any edges incident to this node.
         edges.removeIf(edge -> edge[0].equals(label) || edge[1].equals(label));
     }
 
@@ -221,14 +223,13 @@ public class GraphParser {
     }
 
     // New unified GraphSearch API with an enum parameter.
-    // Depending on the value of 'algo' (BFS or DFS), it uses the corresponding search strategy.
     public Path GraphSearch(Node src, Node dst, Algorithm algo) {
         String start = src.getLabel();
         String target = dst.getLabel();
         if (!nodes.contains(start) || !nodes.contains(target)) {
             return null;
         }
-        switch(algo) {
+        switch (algo) {
             case BFS:
                 return bfsSearch(start, target);
             case DFS:
@@ -294,5 +295,4 @@ public class GraphParser {
         }
         return false;
     }
-
 }

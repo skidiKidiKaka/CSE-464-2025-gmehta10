@@ -16,3 +16,4 @@ PJ1/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/in
 PJ1/target/surefire-reports/project.GraphParserTest.txt
 PJ1/target/surefire-reports/TEST-project.GraphParserTest.xml
 PJ1/target/test-classes/project/GraphParserTest.class
+*.class
