@@ -26,6 +26,15 @@ public class GraphParser {
         return line;
     }
 
+    // Refactor 3: Extract Method to consolidate file writing
+    private void writeToFile(String filepath, String content) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filepath))) {
+            writer.print(content);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void parseGraph(String filepath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filepath))) {
             String raw;
@@ -97,12 +106,9 @@ public class GraphParser {
         return sb.toString();
     }
 
+    // use helper for DOT output
     public void outputDOTGraph(String filepath) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(filepath))) {
-            writer.print(toDOTString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        writeToFile(filepath, toDOTString());
     }
 
     public void outputGraphics(String filepath, String format) {
@@ -119,12 +125,9 @@ public class GraphParser {
         }
     }
 
+    // use helper for plain-text output
     public void outputGraph(String filepath) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(filepath))) {
-            writer.print(this.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        writeToFile(filepath, this.toString());
     }
 
     // Remove a node and all its incident edges.
@@ -165,7 +168,7 @@ public class GraphParser {
         }
     }
 
-    // --- Refactor 2: Extract Variable in BFS/DFS loops ---
+    // Refactor 2: Extract Variable in BFS/DFS loops
     public Path GraphSearch(Node src, Node dst) {
         String start = src.getLabel();
         String target = dst.getLabel();
@@ -185,7 +188,7 @@ public class GraphParser {
             }
             for (String[] edge : edges) {
                 String from = edge[0];
-                String to   = edge[1];
+                String to   = edge[1];    // extracted neighbor variable
                 if (from.equals(current) && !visited.contains(to)) {
                     visited.add(to);
                     prev.put(to, current);
