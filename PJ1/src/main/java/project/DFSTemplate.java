@@ -3,7 +3,10 @@ package project;
 import java.util.*;
 
 
-public class DFSTemplate extends GraphSearchTemplate {
+public class DFSTemplate
+        extends GraphSearchTemplate
+        implements GraphSearchStrategy {
+
     public DFSTemplate(Set<String> nodes, List<String[]> edges) {
         super(nodes, edges);
     }

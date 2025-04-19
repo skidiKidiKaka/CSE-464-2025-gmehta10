@@ -3,6 +3,7 @@ package project;
 import java.io.*;
 import java.util.*;
 
+
 public class GraphParser {
     private Set<String> nodes;
     private List<String[]> edges;
@@ -12,18 +13,13 @@ public class GraphParser {
         edges = new ArrayList<>();
     }
 
-    // Question2: Template Pattern – delegate search to templates
+    // Question3: Strategy Pattern – choose BFS or DFS at runtime
     public Path GraphSearch(Node src, Node dst, Algorithm algo) {
-        String start = src.getLabel();
+        String start  = src.getLabel();
         String target = dst.getLabel();
-        switch (algo) {
-            case BFS:
-                return new BFSTemplate(nodes, edges).search(start, target);
-            case DFS:
-                return new DFSTemplate(nodes, edges).search(start, target);
-            default:
-                return null;
-        }
+        GraphSearchStrategy strat =
+                GraphSearchStrategyFactory.getStrategy(algo, nodes, edges);
+        return strat.search(start, target);
     }
 
     // Refactor4: Rename Method – cleanLine (was normalizeLine)
@@ -128,8 +124,9 @@ public class GraphParser {
         try {
             File temp = File.createTempFile("graph", ".dot");
             outputDOTGraph(temp.getAbsolutePath());
-            ProcessBuilder pb = new ProcessBuilder("dot", "-T" + format,
-                    temp.getAbsolutePath(), "-o", filepath);
+            ProcessBuilder pb = new ProcessBuilder(
+                    "dot", "-T" + format, temp.getAbsolutePath(), "-o", filepath
+            );
             pb.redirectErrorStream(true);
             Process p = pb.start();
             p.waitFor();
@@ -137,10 +134,6 @@ public class GraphParser {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public void outputGraph(String filepath) {
-        writeToFile(filepath, toString());
     }
 
     public void removeNode(String label) {
@@ -176,46 +169,6 @@ public class GraphParser {
         if (!found) {
             throw new IllegalArgumentException("Edge does not exist: " + src + " -> " + dst);
         }
-    }
-
-    // Refactor2: Extract Variable in BFS/DFS loops
-    public Path GraphSearch(Node src, Node dst) {
-        String start = src.getLabel();
-        String target = dst.getLabel();
-        if (!nodes.contains(start) || !nodes.contains(target)) {
-            return null;
-        }
-        Map<String,String> prev = new HashMap<>();
-        Set<String> visited = new HashSet<>();
-        Queue<String> q = new LinkedList<>();
-        visited.add(start);
-        q.offer(start);
-
-        while (!q.isEmpty()) {
-            String cur = q.poll();
-            if (cur.equals(target)) {
-                return reconstructPath(start, target, prev);
-            }
-            for (String[] edge : edges) {
-                String from = edge[0];
-                String to   = edge[1];
-                if (from.equals(cur) && !visited.contains(to)) {
-                    visited.add(to);
-                    prev.put(to, cur);
-                    q.offer(to);
-                }
-            }
-        }
-        return null;
-    }
-
-    private Path reconstructPath(String start, String target, Map<String,String> prev) {
-        List<String> path = new ArrayList<>();
-        for (String at = target; at != null; at = prev.get(at)) {
-            path.add(at);
-        }
-        Collections.reverse(path);
-        return (!path.isEmpty() && path.get(0).equals(start)) ? new Path(path) : null;
     }
 
     @Override

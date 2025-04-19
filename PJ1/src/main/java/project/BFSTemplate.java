@@ -3,7 +3,10 @@ package project;
 import java.util.*;
 
 
-public class BFSTemplate extends GraphSearchTemplate {
+public class BFSTemplate
+        extends GraphSearchTemplate
+        implements GraphSearchStrategy {
+
     public BFSTemplate(Set<String> nodes, List<String[]> edges) {
         super(nodes, edges);
     }
