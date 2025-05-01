@@ -11,39 +11,30 @@ public class Main {
         GraphParser parser = new GraphParser();
         parser.parseGraph(filepath);
 
-        // start and end of the node
         Node start = new Node("a");
-        Node end   = new Node("h");
+        Node end   = new Node("c");
 
-        // BFS
-        System.out.println("=== BFS Path ===");
+        System.out.println("--- search strategies (from 'a' to 'c') ---\n");
+
+        System.out.println("performing bfs search:");
         Path bfsPath = parser.GraphSearch(start, end, Algorithm.BFS);
-        if (bfsPath != null) {
-            System.out.println(bfsPath);
-        } else {
-            System.out.println("No path found using BFS.");
-        }
+        System.out.println("bfs path: " + (bfsPath != null
+                ? String.join(" -> ", bfsPath.getNodes())
+                : "no path found") + "\n");
 
-        // DFS
-        System.out.println("\n=== DFS Path ===");
+        System.out.println("performing dfs search:");
         Path dfsPath = parser.GraphSearch(start, end, Algorithm.DFS);
-        if (dfsPath != null) {
-            System.out.println(dfsPath);
-        } else {
-            System.out.println("No path found using DFS.");
-        }
+        System.out.println("dfs path: " + (dfsPath != null
+                ? String.join(" -> ", dfsPath.getNodes())
+                : "no path found") + "\n");
 
-        // Random Walk Search
-        System.out.println("\n=== Random Walk Search ===");
-        for (int i = 1; i <= 10; i++) { // runs 10 times.
-            System.out.println("Run " + i + ":");
-            Path randomPath = parser.GraphSearch(start, end, Algorithm.RANDOMWALK);
-            if (randomPath != null) {
-                System.out.println(randomPath);
-            } else {
-                System.out.println("No path found on this run.");
-            }
-            System.out.println();
+        System.out.println("performing random walk search (multiple runs):\n");
+        for (int i = 1; i <= 5; i++) {
+            System.out.println("run #" + i);
+            Path rw = parser.GraphSearch(start, end, Algorithm.RANDOMWALK);
+            System.out.println("random walk: " + (rw != null
+                    ? String.join(" -> ", rw.getNodes())
+                    : "no path found") + "\n");
         }
     }
 }

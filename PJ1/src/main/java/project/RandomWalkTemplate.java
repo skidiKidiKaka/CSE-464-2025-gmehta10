@@ -9,30 +9,46 @@ public class RandomWalkTemplate extends GraphSearchTemplate {
         super(nodes, edges);
     }
 
-    @Override protected Collection<String> createFrontier() {
-        return new ArrayList<>();  // random‐access removal
+    @Override
+    protected Collection<String> createFrontier() {
+        return new ArrayList<>();
     }
 
-    @Override protected void initialize(String start) {
-        frontier   = createFrontier();
-        visited    = new HashSet<>();
-        parentMap  = new HashMap<>();
-        frontier.add(start);
-        visited.add(start);
+    @Override
+    protected void initialize(String start) {
+        frontier = createFrontier();
+        visited = new HashSet<>();
+        parentMap = new HashMap<>();
+        addToFrontier(start);
+        parentMap.put(start, null);
     }
 
-    @Override protected boolean isFrontierEmpty() {
+    @Override
+    protected boolean isFrontierEmpty() {
         return frontier.isEmpty();
     }
 
-    @Override protected String getNext() {
-        // remove a random element
+    @Override
+    protected String getNext() {
         List<String> list = (List<String>) frontier;
         int idx = rng.nextInt(list.size());
-        return list.remove(idx);
+        String node = list.remove(idx);
+        System.out.println("random visiting Path{nodes=" + buildCurrentPathString(node) + "}");
+        return node;
     }
 
-    @Override protected void addToFrontier(String node) {
+    @Override
+    protected void addToFrontier(String node) {
         frontier.add(node);
+    }
+
+    // helper to reconstruct partial path for logging
+    private String buildCurrentPathString(String node) {
+        List<String> p = new ArrayList<>();
+        for (String at = node; at != null; at = parentMap.get(at)) {
+            p.add(at);
+        }
+        Collections.reverse(p);
+        return p.toString();
     }
 }
