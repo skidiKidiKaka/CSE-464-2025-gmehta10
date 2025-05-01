@@ -7,44 +7,43 @@ public class Main {
             return;
         }
         String filepath = args[0];
+
         GraphParser parser = new GraphParser();
         parser.parseGraph(filepath);
-        System.out.println("Original Graph:");
-        System.out.println(parser.toString());
-        System.out.println("\nAdding nodes...");
-        boolean addedX = parser.addNode("X");
-        if (addedX) {
-            System.out.println("Node 'X' added.");
+
+        // start and end of the node
+        Node start = new Node("a");
+        Node end   = new Node("h");
+
+        // BFS
+        System.out.println("=== BFS Path ===");
+        Path bfsPath = parser.GraphSearch(start, end, Algorithm.BFS);
+        if (bfsPath != null) {
+            System.out.println(bfsPath);
         } else {
-            System.out.println("Node 'X' already exists.");
+            System.out.println("No path found using BFS.");
         }
-        parser.addNodes(new String[]{"Y", "Z", "a"});
-        System.out.println("\nGraph after adding nodes:");
-        System.out.println(parser.toString());
-        System.out.println("\nAdding edges...");
-        boolean addedEdge1 = parser.addEdge("X", "Y");
-        if (addedEdge1) {
-            System.out.println("Edge 'X -> Y' added.");
+
+        // DFS
+        System.out.println("\n=== DFS Path ===");
+        Path dfsPath = parser.GraphSearch(start, end, Algorithm.DFS);
+        if (dfsPath != null) {
+            System.out.println(dfsPath);
         } else {
-            System.out.println("Edge 'X -> Y' already exists.");
+            System.out.println("No path found using DFS.");
         }
-        boolean addedEdge2 = parser.addEdge("B", "C");
-        if (addedEdge2) {
-            System.out.println("Edge 'B -> C' added.");
-        } else {
-            System.out.println("Edge 'B -> C' already exists.");
+
+        // Random Walk Search
+        System.out.println("\n=== Random Walk Search ===");
+        for (int i = 1; i <= 10; i++) { // runs 10 times.
+            System.out.println("Run " + i + ":");
+            Path randomPath = parser.GraphSearch(start, end, Algorithm.RANDOMWALK);
+            if (randomPath != null) {
+                System.out.println(randomPath);
+            } else {
+                System.out.println("No path found on this run.");
+            }
+            System.out.println();
         }
-        boolean addedEdge3 = parser.addEdge("X", "Y");
-        if (addedEdge3) {
-            System.out.println("Edge 'X -> Y' added.");
-        } else {
-            System.out.println("Edge 'X -> Y' already exists.");
-        }
-        System.out.println("\nUpdated Graph:");
-        System.out.println(parser.toString());
-        System.out.println("\nOutputting DOT file to output.dot");
-        parser.outputDOTGraph("output.dot");
-        System.out.println("Outputting graphics to graph.png");
-        parser.outputGraphics("graph.png", "png");
     }
 }
