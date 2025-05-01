@@ -23,6 +23,8 @@ public abstract class GraphSearchTemplate {
         frontier  = createFrontier();
 
         initialize(start);
+        parentMap.put(start, null);
+        visited.add(start);
 
         while (!isFrontierEmpty()) {
             String current = getNext();
@@ -45,12 +47,19 @@ public abstract class GraphSearchTemplate {
 
     private Path buildPath(String start, String target) {
         List<String> path = new ArrayList<>();
-        for (String at = target; at != null; at = parentMap.get(at)) {
+        String at = target;
+        while (at != null) {
             path.add(at);
+            if (at.equals(start)) {
+                // once we've prepended the start node, stop walking back
+                break;
+            }
+            at = parentMap.get(at);
         }
         Collections.reverse(path);
         return path.get(0).equals(start) ? new Path(path) : null;
     }
+
 
     protected abstract Collection<String> createFrontier();
     protected abstract void initialize(String start);

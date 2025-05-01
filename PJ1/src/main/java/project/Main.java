@@ -12,7 +12,7 @@ public class Main {
         parser.parseGraph(filepath);
 
         Node start = new Node("a");
-        Node end   = new Node("c");
+        Node end   = new Node("h");
 
         System.out.println("--- search strategies (from 'a' to 'c') ---\n");
 
